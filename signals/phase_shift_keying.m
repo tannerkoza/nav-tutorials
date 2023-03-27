@@ -10,17 +10,18 @@ close all
 %% User-Defined Variables
 
 % time & sampling
-sig_duration = 1; % signal duration [s]
-fsamp = 1000; % sampling frequency [Hz]
+sig_duration = 1.1; % signal duration [s]
+fsamp = 10000; % sampling frequency [Hz]
 
 % carrier signal
 fcarr = 10; % carrier frequency [Hz]
 
 % baseband code
-fcode = 1; % code frequency [Hz]
-fchip = 100; % chip frequency [Hz]
+fcode = 10; % code frequency [Hz]
+fchip = 1000; % chip frequency [Hz]
 code_data_shift = 45; % code shift [chips]
 code_pilot_shift = 20;
+code_per_duration = sig_duration/(1/fcode);
 
 %% Initialization
 
@@ -36,11 +37,11 @@ samp_per_chip = fsamp / fchip; % samples per chip
 chip_per_code = fchip / fcode; % chips per code period
 
 code_data = 2 * randi([0, 1], 1, chip_per_code) - 1; % NRZ data channel code
-upsamp_code_data = repelem(code_data, samp_per_chip);
+upsamp_code_data = repvec(repelem(code_data, samp_per_chip), code_per_duration);
 shift_code_data = circshift(upsamp_code_data, code_data_shift*samp_per_chip); 
 
 code_pilot = 2 * randi([0, 1], 1, chip_per_code) - 1; % NRZ pilot channel code
-upsamp_code_pilot = repelem(code_pilot, samp_per_chip);
+upsamp_code_pilot = repvec(repelem(code_pilot, samp_per_chip), code_per_duration);
 shift_code_pilot = circshift(upsamp_code_pilot, code_pilot_shift*samp_per_chip); 
 
 %% BPSK Modulation
@@ -146,4 +147,8 @@ function plot_acquisition(correlation)
     ylabel('Correlation Magnitude')
     axis padded
     title('PSK Acquistion Correlation')
+end
+
+function out_vec = repvec(vec, mult)
+    out_vec = [repmat(vec,1,fix(mult)) vec(1:round(numel(vec)*mod(mult,1)))];
 end
