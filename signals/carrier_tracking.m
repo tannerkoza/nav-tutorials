@@ -7,18 +7,19 @@ close all
 %% User-Defined Variables
 
 % time & sampling
-duration = 10; % [s]
-int_period = 0.002; % [s]
+duration = 5; % [s]
+int_period = 0.001; % [s]
 
 % signal
 fcarrier = 1000; % [Hz]
+fcarrierrate = 50; %[Hz/s]
 fsamp = 1e6; % [Hz]
-fbasis = 980; % [Hz]
-cn0 = 1000; % [dBHz]
+fbasis = 960; % [Hz]
+cn0 = 60; % [dBHz]
 
 % filter settings
-fll_noise_bw = 1; % [Hz]
-pll_noise_bw = 20; % [Hz]
+fll_noise_bw = 10; % [Hz]
+pll_noise_bw = 15; % [Hz]
 
 %% Initialization
 
@@ -28,7 +29,7 @@ time = 0:int_period:(duration - int_period);
 num_int_periods = ceil(duration/int_period);
 
 % signal
-carr = navtools.dsp.complex_carrier(fcarrier, fsamp, duration, cn0);
+carr = navtools.dsp.complex_carrier(fcarrier, fcarrierrate, fsamp, duration, cn0);
 start = 1;
 stop = 1 + fsamp * int_period - 1;
 
@@ -84,16 +85,22 @@ for period = 1:num_int_periods
 end
 
 figure('Name','FLL Error')
-plot(time, fll_error_log)
+plot(time, fll_error_log/(2*pi))
+xlabel('Time [s]')
+ylabel('Error [Hz]')
 
 figure('Name','PLL Error')
-plot(time, pll_error_log)
+plot(time, pll_error_log/(2*pi))
+xlabel('Time [s]')
+ylabel('Error [cycles]')
 
 figure('Name','Replica Frequency')
 hold on
 plot(time, fll_replica_freq_log, 'DisplayName','FLL')
 plot(time, pll_replica_freq_log, 'DisplayName','PLL')
 legend()
+xlabel('Time [s]')
+ylabel('NCO Frequency [Hz]')
 
 function error = freq_disc(ip, ip_last, qp, qp_last, T)
     cross = ip_last * qp - ip * qp_last;
@@ -102,7 +109,7 @@ function error = freq_disc(ip, ip_last, qp, qp_last, T)
 end
 
 function error = phase_disc(ip, qp)
-    error = atan(qp/ip) / (2 * pi);
+    error = atan(qp/ip);
 end
 
 function [freqOffset, fllWNew, fllXNew] = freq_lock_loop(error, noise_bw, fllW, fllX, T)
