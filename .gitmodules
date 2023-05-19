@@ -1,0 +1,4 @@
+[submodule "navtools.m"]
+	path = navtools.m
+	url = git@github.com:tannerkoza/navtools.m.git
+	branch = main
